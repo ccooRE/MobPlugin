@@ -18,7 +18,6 @@ import cn.nukkit.nbt.tag.DoubleTag;
 import cn.nukkit.nbt.tag.FloatTag;
 import cn.nukkit.nbt.tag.ListTag;
 import cn.nukkit.plugin.PluginBase;
-import cn.nukkit.utils.Config;
 import cn.nukkit.utils.ConfigSection;
 import cn.nukkit.utils.TextFormat;
 
@@ -28,10 +27,8 @@ import com.pikycz.mobplugin.entities.animal.walking.*;
 import com.pikycz.mobplugin.entities.animal.flying.*;
 import com.pikycz.mobplugin.entities.block.BlockEntitySpawner;
 import com.pikycz.mobplugin.entities.monster.walking.*;
-import com.pikycz.mobplugin.entities.monster.flying.*;
 import com.pikycz.mobplugin.entities.projectile.*;
 import com.pikycz.mobplugin.utils.Utils;
-import java.util.LinkedHashMap;
 
 public class MobPlugin extends PluginBase implements Listener {
 
@@ -55,53 +52,6 @@ public class MobPlugin extends PluginBase implements Listener {
     public void onEnable() {
         Instance = this;
         this.getServer().getPluginManager().registerEvents(this, this);
-        this.getLogger().info("Prepare" + this.getDataFolder() + "/MobPlugin.yml");
-        this.getDataFolder().mkdirs();
-        this.loadAll();
-
-    }
-
-    public Config getPluginConfig() {
-        return new Config(this.getDataFolder() + "MobPlugin.yml", Config.YAML);
-    }
-
-    public void loadAll() {
-        this.saveDefaultConfig();
-        this.loadEntities();
-    }
-
-    @SuppressWarnings("serial")
-    public void loadEntities() {
-        this.entities = new Config(this.getDataFolder() + "/MobPlugin.yml", Config.YAML,
-                new ConfigSection(new LinkedHashMap<String, Object>() {
-                    {
-                        put("entities.spawn-animals", true);
-                        put("entities.spawn-mobs", true);
-                    }
-                })).getSections();
-    }
-
-    @Override
-    public void onDisable() {
-        Utils.logServerInfo("Plugin disabled successful.");
-        this.saveAll();
-    }
-
-    public void saveAll() {
-        this.saveEntities();
-        this.getConfig().save();
-    }
-
-    public void saveEntities(boolean async) {
-        Config mobplugin = new Config(this.getDataFolder() + "/MobPlugin.yml", Config.YAML);
-        mobplugin.setAll(this.entities);
-        mobplugin.save(async); 
-    }
-
-    public void saveEntities() {
-        Config score = new Config(this.getDataFolder() + "/MobPlugin.yml", Config.YAML);
-        score.setAll(this.entities);
-        score.save();
     }
 
     private void registerEntities() {
@@ -124,16 +74,20 @@ public class MobPlugin extends PluginBase implements Listener {
         Entity.registerEntity(ZombieHorse.class.getSimpleName(), ZombieHorse.class);
 
         //register Monster entities
-        Entity.registerEntity(Blaze.class.getSimpleName(), Blaze.class);
-        Entity.registerEntity(EnderDragon.class.getSimpleName(), EnderDragon.class); //TODO: Spawn in End
-        Entity.registerEntity(Wither.class.getSimpleName(), Wither.class);
-        Entity.registerEntity(Ghast.class.getSimpleName(), Ghast.class); //TODO: Spawn in Nether
+        //Entity.registerEntity(Blaze.class.getSimpleName(), Blaze.class);
+        //Entity.registerEntity(EnderDragon.class.getSimpleName(), EnderDragon.class); //TODO: Spawn in End
+        //Entity.registerEntity(Wither.class.getSimpleName(), Wither.class);
+        //Entity.registerEntity(ElderGuardian.class.getSimpleName(), ElderGuardian.class); //TODO: Spawn in Ocean palace swim , attack
+        //Entity.registerEntity(Ghast.class.getSimpleName(), Ghast.class); //TODO: Spawn in Nether
+        //Entity.registerEntity(Guardian.class.getSimpleName(), Guardian.class); //TODO: Spawn in Ocean palace swim , attack
         Entity.registerEntity(CaveSpider.class.getSimpleName(), CaveSpider.class);
         Entity.registerEntity(Creeper.class.getSimpleName(), Creeper.class);
         Entity.registerEntity(Enderman.class.getSimpleName(), Enderman.class); //TODO: Move(teleport) , attack
+        //Entity.registerEntity(MagmaCube.class.getSimpleName(), MagmaCube.class);//Spawn In Nether
         Entity.registerEntity(PigZombie.class.getSimpleName(), PigZombie.class);//Spawn in Nether
         Entity.registerEntity(Silverfish.class.getSimpleName(), Silverfish.class); //TODO: Spawn random from stone
         Entity.registerEntity(Skeleton.class.getSimpleName(), Skeleton.class);
+        //Entity.registerEntity(Slime.class.getSimpleName(), Slime.class); //TODO: Make random spawn Slime (Big,Small)
         Entity.registerEntity(Spider.class.getSimpleName(), Spider.class);
         Entity.registerEntity(Stray.class.getSimpleName(), Stray.class);
         Entity.registerEntity(Witch.class.getSimpleName(), Witch.class);
@@ -145,7 +99,7 @@ public class MobPlugin extends PluginBase implements Listener {
         Entity.registerEntity("BlueWitherSkull", BlueWitherSkull.class);
         Entity.registerEntity("BlazeFireBall", BlazeFireBall.class);
         Entity.registerEntity("DragonFireBall", DragonFireBall.class);
-        Entity.registerEntity("GhastFireBall", GhastFireBall.class);
+        Entity.registerEntity("GhastDireBall", GhastFireBall.class);
 
         // register the mob spawner (which is probably not needed anymore)
         BlockEntity.registerBlockEntity("MobSpawner", BlockEntitySpawner.class);
@@ -172,6 +126,7 @@ public class MobPlugin extends PluginBase implements Listener {
                 commandSender.sendMessage(TextFormat.GREEN + "/mob removemobs" + TextFormat.YELLOW + "- Remove all Mobs");
                 commandSender.sendMessage(TextFormat.GREEN + "/mob removeitems" + TextFormat.YELLOW + "- Remove all items on ground");
                 commandSender.sendMessage(TextFormat.RED + "/mob version" + TextFormat.YELLOW + "- Show MobPlugin Version");
+                commandSender.sendMessage(TextFormat.RED + "/mob info" + TextFormat.YELLOW + "- Show info result");
             } else {
                 switch (args[0]) {
                     case "summon":
@@ -225,6 +180,32 @@ public class MobPlugin extends PluginBase implements Listener {
                     case "version":
                         commandSender.sendMessage(TextFormat.GREEN + "Version > 1.1 working with MCPE 1.1");//Todo Automatic Updater?
                         break;
+                    case "info":
+                        int chunksCollected = 0;
+                        int entitiesCollected = 0;
+                        int tilesCollected = 0;
+                        long memory = Runtime.getRuntime().freeMemory();
+
+                        for (Level level : Server.getInstance().getLevels().values()) {
+                            int chunksCount = level.getChunks().size();
+                            int entitiesCount = level.getEntities().length;
+                            int tilesCount = level.getBlockEntities().size();
+                            level.doChunkGarbageCollection();
+                            level.unloadChunks(true);
+                            chunksCollected += chunksCount - level.getChunks().size();
+                            entitiesCollected += entitiesCount - level.getEntities().length;
+                            tilesCollected += tilesCount - level.getBlockEntities().size();
+                            level.clearCache(true);
+                        }
+
+                        System.gc();
+
+                        long freedMemory = Runtime.getRuntime().freeMemory() - memory;
+                        commandSender.sendMessage(TextFormat.GREEN + "---- " + TextFormat.WHITE + "Info result (last 5 mins)" + TextFormat.GREEN + " ----");
+                        commandSender.sendMessage(TextFormat.GOLD + "Chunks: " + TextFormat.RED + chunksCollected);
+                        commandSender.sendMessage(TextFormat.GOLD + "Entities: " + TextFormat.RED + entitiesCollected);
+                        commandSender.sendMessage(TextFormat.GOLD + "Block Entities: " + TextFormat.RED + tilesCollected);
+                        commandSender.sendMessage(TextFormat.GOLD + "RAM freed: " + TextFormat.RED + NukkitMath.round((freedMemory / 1024d / 1024d), 2) + " MB");
                     default:
                         output += "Unkown command.";
                         break;
