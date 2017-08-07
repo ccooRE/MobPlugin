@@ -52,7 +52,7 @@ public class MobPlugin extends PluginBase implements Listener {
     public void onEnable() {
         Instance = this;
         this.getServer().getPluginManager().registerEvents(this, this);
-    }
+    } 
 
     private void registerEntities() {
         // register Passive entities
@@ -99,7 +99,7 @@ public class MobPlugin extends PluginBase implements Listener {
         Entity.registerEntity("BlueWitherSkull", BlueWitherSkull.class);
         Entity.registerEntity("BlazeFireBall", BlazeFireBall.class);
         Entity.registerEntity("DragonFireBall", DragonFireBall.class);
-        Entity.registerEntity("GhastDireBall", GhastFireBall.class);
+        Entity.registerEntity("GhastFireBall", GhastFireBall.class);
 
         // register the mob spawner (which is probably not needed anymore)
         BlockEntity.registerBlockEntity("MobSpawner", BlockEntitySpawner.class);
@@ -126,7 +126,6 @@ public class MobPlugin extends PluginBase implements Listener {
                 commandSender.sendMessage(TextFormat.GREEN + "/mob removemobs" + TextFormat.YELLOW + "- Remove all Mobs");
                 commandSender.sendMessage(TextFormat.GREEN + "/mob removeitems" + TextFormat.YELLOW + "- Remove all items on ground");
                 commandSender.sendMessage(TextFormat.RED + "/mob version" + TextFormat.YELLOW + "- Show MobPlugin Version");
-                commandSender.sendMessage(TextFormat.RED + "/mob info" + TextFormat.YELLOW + "- Show info result");
             } else {
                 switch (args[0]) {
                     case "summon":
@@ -179,35 +178,6 @@ public class MobPlugin extends PluginBase implements Listener {
                         break;
                     case "version":
                         commandSender.sendMessage(TextFormat.GREEN + "Version > 1.1 working with MCPE 1.1");//Todo Automatic Updater?
-                        break;
-                    case "info":
-                        int chunksCollected = 0;
-                        int entitiesCollected = 0;
-                        int tilesCollected = 0;
-                        long memory = Runtime.getRuntime().freeMemory();
-
-                        for (Level level : Server.getInstance().getLevels().values()) {
-                            int chunksCount = level.getChunks().size();
-                            int entitiesCount = level.getEntities().length;
-                            int tilesCount = level.getBlockEntities().size();
-                            level.doChunkGarbageCollection();
-                            level.unloadChunks(true);
-                            chunksCollected += chunksCount - level.getChunks().size();
-                            entitiesCollected += entitiesCount - level.getEntities().length;
-                            tilesCollected += tilesCount - level.getBlockEntities().size();
-                            level.clearCache(true);
-                        }
-
-                        System.gc();
-
-                        long freedMemory = Runtime.getRuntime().freeMemory() - memory;
-                        commandSender.sendMessage(TextFormat.GREEN + "---- " + TextFormat.WHITE + "Info result (last 5 mins)" + TextFormat.GREEN + " ----");
-                        commandSender.sendMessage(TextFormat.GOLD + "Chunks: " + TextFormat.RED + chunksCollected);
-                        commandSender.sendMessage(TextFormat.GOLD + "Entities: " + TextFormat.RED + entitiesCollected);
-                        commandSender.sendMessage(TextFormat.GOLD + "Block Entities: " + TextFormat.RED + tilesCollected);
-                        commandSender.sendMessage(TextFormat.GOLD + "RAM freed: " + TextFormat.RED + NukkitMath.round((freedMemory / 1024d / 1024d), 2) + " MB");
-                    default:
-                        output += "Unkown command.";
                         break;
                 }
             }
